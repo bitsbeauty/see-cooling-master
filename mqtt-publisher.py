@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 # Import package
 import paho.mqtt.client as mqtt
 
@@ -5,7 +7,7 @@ import paho.mqtt.client as mqtt
 MQTT_BROKER = "seebier.local"
 MQTT_PORT = 1883
 MQTT_KEEPALIVE_INTERVAL = 45
-MQTT_TOPIC = "/testTopic"
+MQTT_TOPIC = "/kuehlung/setTemp/kuehlung1"
 MQTT_MSG = "yes, Hello MQTT - Daniel, you did that!"
 
 
