@@ -10,7 +10,7 @@ import database as db
 MQTT_BROKER = "seebier.local"
 MQTT_PORT = 1883
 MQTT_KEEPALIVE_INTERVAL = 45
-MQTT_TOPIC = "/freezer/f0/isValues"
+MQTT_TOPIC = "/freezer/+/isValues"
 
 
 # The callback for when the client receives a CONNACK response from the server.
