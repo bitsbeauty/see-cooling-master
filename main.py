@@ -5,12 +5,14 @@ import paho.mqtt.client as mqtt
 # import paho.mqtt.subscribe as subscribe
 import json
 import database as db
+import string
 
 # Define Variables
 MQTT_BROKER = "seebier.local"
 MQTT_PORT = 1883
 MQTT_KEEPALIVE_INTERVAL = 45
-MQTT_TOPIC = "/freezer/+/isValues"
+MQTT_TOPIC_TEMP_RECEIVE = "/freezer/+/isValues"
+MQTT_TOPIC_SEND_TO_FREEZER = "/freezer/f*/setValues"
 
 
 # The callback for when the client receives a CONNACK response from the server.
@@ -21,7 +23,7 @@ def on_connect(client, userdata, flags, rc):
 	# Subscribing in on_connect() means that if we lose the connection and
 	# reconnect then subscriptions will be renewed.
 	# client.subscribe("$SYS/#")
-	mqttc.subscribe(MQTT_TOPIC,2)
+	mqttc.subscribe(MQTT_TOPIC_TEMP_RECEIVE,2)
 
 
 # The callback for when a PUBLISH message is received from the server.
@@ -38,25 +40,26 @@ def on_message_kuehlung(client, userdata, message):
 	#print("%s %s" % (message.topic, message.payload))
 
 	# get nr of the freezer which send the mesage
+	dstr =  "###mqtt message### "
 	frezNr = int(message.topic.partition('/freezer/f')[-1].rpartition('/')[0])
-	print("frezzerNR: %s")%(frezNr)
+	dstr += ("frezzerNR: %s")%(frezNr)
 
 	data = json.loads(message.payload)
 
 	for key,value in data.iteritems():
 		if key == 'tempbeer':
-			print "beer:"+str(value)
-			f[frezNr].temp_beer = value
-			## TODO PUT INTO mysql database
+			dstr += "- beer:"+str(value)
+			freezer[frezNr].temp_beer = value
 		if key == 'tempair':
-			print "air:"+str(value)
-			## TODO PUT INTO mysql database
-			f[frezNr].temp_air = value
+			dstr += " - air:"+str(value)
+			freezer[frezNr].temp_air = value
 
-	f[frezNr].save()
+	dstr += " ###"
+	print dstr
+	freezer[frezNr].save()
 
 
-f = [] # abstraction list of freezer
+freezer = [] # abstraction list of freezer
 
 # Initiate MQTT Client
 mqttc = mqtt.Client()
@@ -85,8 +88,8 @@ if __name__ == '__main__':
 			# get headers
 			id = i+1
 			
-			f.append(db.Freezer(i+1))
-			f[i].updateValues()  # import data
+			freezer.append(db.Freezer(i+1))
+			freezer[i].updateValues()  # import data
 
 
 	##### //// MQTT /////// ######
@@ -96,14 +99,12 @@ if __name__ == '__main__':
 
 	#client.connect("seebier.local", 1883, 60)
 
-	print "BEFORE"
 	#TODO: add QoS!!!
 	# subscribe.callback(on_message_kuehlung, "/freezer/+/isValues", hostname=MQTT_BROKER)
 	mqttc.on_message = on_message_kuehlung
 	mqttc.on_connect = on_connect
 	# mqttc.on_publish = on_publish
 	# mqttc.on_subscribe = on_subscribe
-	print "AFTER"
 
 	# Connect
 	mqttc.connect(MQTT_BROKER)
@@ -114,16 +115,45 @@ if __name__ == '__main__':
 		
 
 		while True:
+			print("-START LOOP------------")
 			mqttc.loop()
 
-			# 1) get the freezer temp and updtae in database
 			
-			f[0].updateValues()
-			if f[0].isStarted() is True:
-				print("Freezer %i is Started") %(f[0].id)
-				mqttc.publish("canyouhearme/01", "FREEZER")
+			
+			for f in freezer:
+				# 1) get the freezer temp and get last databse values
+				f.updateValues()
 
-				# print("Freezer Duration %i") %(f[0].getDurationStr())
+				if f.isRunning() is True:
+					print "----------FREEZER ["+ str(f.id) +"] started:"+str(f.isRunning())
+					# print "startime", frez.starttime
+					print "All Runtime:", f.overallRuntime
+					print "RUNNING    :", f.runtime
+					print "DURATION   :", f.getDurationStr()
+
+
+					# 2) get sollwert from database
+					f.getSollTemp()
+
+					# 3) compare temp values and set freezer on/off
+
+					# 4) pack value sin json and send to freezer
+					mqttMsg = {}
+					mqttMsg["targetTemp"] = str(f.temp_target)
+					#mqttMsg[targetDuration] = f.targetDuration
+					mqttMsg = json.dumps(mqttMsg)
+
+					mqttTopic = string.replace(MQTT_TOPIC_SEND_TO_FREEZER, "*", str(f.id))
+					mqttc.publish(mqttTopic, mqttMsg, 2)
+
+					## TODO: when freezer mqtt com is down -> give signal!!
+					
+				else:
+					print "----------FREEZER ["+ str(f.id) +"] started:"+str(f.isRunning())
+
+
+			
+
 
 
 			# check if temp is t

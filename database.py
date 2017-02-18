@@ -36,14 +36,16 @@ class Freezer():
 	"""docstring for Freezer"""
 	id = None   #  first starts with 1 !!!
 	starttime = None
+
 	temp_air = 0.0
 	temp_beer = 0.0
-	temp_target = 0.0
+	temp_target = None
 
 	steps = {} # # type dictonary,
 
 	overallRuntime = 0   # maximal time to run from start to end
 	runtime = 0			 # time how long the system is started
+	isStarted = False
 
 	def __init__(self, _id):
 		self.id = _id
@@ -54,24 +56,14 @@ class Freezer():
 		# h.temp_beer = self.temp_beer
 		# h.temp_target = self.temp_target
 
-		q = Header.update(temp_air = self.temp_air,
+		q = Header.update(starttime = self.starttime,
+			temp_air = self.temp_air,
 			temp_beer = self.temp_beer,
 			temp_target = self.temp_target).where(Header.id == self.id)
 		q.execute()  # Execute the query, updating the database.
 
 	def updateValues(self):
 		'import values from he database'
-		# get steps
-		# try:  
-		# 	db.connect()
-		# except:  
-		# 	# this catches ALL other exceptions including errors.  
-		# 	# You won't get any error messages for debugging  
-		# 	# so only use it once your code is working
-		# 	import traceback
-		# 	print traceback.format_exc()
-		# 	print "Other error or exception occurred!" 
-
 
 		h = Header.get(Header.id == self.id)
 		self.starttime = h.starttime
@@ -81,37 +73,73 @@ class Freezer():
 
 		# get Steps
 		self.steps = Steps.select().where(Steps.tank_id == self.id).dicts()
-		# print "Updated Freezer --> ",self.id
-
-		# db.close()
 
 		# get step Master Values
+		self.overallRuntime = 0
 		for s in self.steps:
 			self.overallRuntime += s["step_duration"]
 
-	def isStarted(self):
 		if self.starttime != None:
-			# print "--ist started"
-			return True
+			self.runtime = time.time() - self.starttime #update runtime
+
+	def isRunning(self):
+		if self.starttime != None and self.starttime != 0:
+			if (self.runtime <= self.overallRuntime):
+				# fermenttaion is running
+				self.isStarted = True
+				return True
+			else:
+				# Fermaentation ended!!!
+				self.isStarted = False
+				self.stop()
+				return False
 		else:
-			# print "-- stopped"
+			# Fermentation stopped
+			self.isStarted = False
 			return False
 
-	def updateRuntime(self):
-		if self.starttime != None:
-			self.runtime = time.time() - self.starttime
-		else:
-			self.runtime = None
-		return self.runtime
+	def stop(self):
+		self.runtime = None
+		self.temp_target = None
+		self.save() #write stop cmd to db
+		print "STOPPED FREEZER - FERMANTATION ENDS"
 
 	def getDurationStr(self):
-		if frez.runtime != None:
+		if self.isStarted:
 			# print("DURATION: ",value.strftime('%Y-%m-%d %H:%M:%S'))
 			# print("DURATION: ",value.strftime('%d %H:%M:%S'))
-			duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(frez.starttime)
+			duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(self.starttime)
 			return duration
 		else:
-			return "---"
+			return "-stopped-"
+
+	def getSollTemp(self):
+		_temptarget = 0
+		_stepSum = 0
+		_lastStepSum = 0
+		for step in self.steps:
+			# DEBUG			
+			# steppstr = ""
+			# for smeta in step:
+			# 	# stepp = stepp + str(sname)
+			# 	steppstr += str(smeta)+': '+str(step[smeta]) + ' - '
+			# print steppstr
+
+			# check if runtime is in this step
+			_stepSum += step["step_duration"]
+			if self.runtime > _lastStepSum and self.runtime <= _stepSum:
+				# print("last= %f < runtime=%f < _stepSum=%f") % (_lastStepSum, self.runtime, _stepSum)
+				_temptarget = step["step_temperature"]
+				# print "break"
+				break
+			#else:
+				# print("last= %f < runtime=%f < _stepSum=%f") % (_lastStepSum, self.runtime, _stepSum)
+
+			_lastStepSum = _stepSum
+
+		if (self.isStarted):
+			self.temp_target = _temptarget
+			print "-> TARGET TEMP =", self.temp_target
 
 
 
