@@ -127,20 +127,22 @@ if __name__ == '__main__':
 				if f.isRunning() is True:
 					print "----------FREEZER ["+ str(f.id) +"] started:"+str(f.isRunning())
 					# print "startime", frez.starttime
-					print "All Runtime:", f.overallRuntime
-					print "RUNNING    :", f.runtime
-					print "DURATION   :", f.getDurationStr()
+					print "Main Duration  :", f.overallRuntime
+					print ("Runtime        : " + str(f.runtime) +" (" + f.getRuntimeStr() + ")" )
+					print "Traget Duration:", f.getTargetDurationStr()
 
 
 					# 2) get sollwert from database
-					f.getSollTemp()
+					f.getTargetTemp()
 
 					# 3) compare temp values and set freezer on/off
 
 					# 4) pack value sin json and send to freezer
 					mqttMsg = {}
 					mqttMsg["targetTemp"] = str(f.temp_target)
-					#mqttMsg[targetDuration] = f.targetDuration
+					mqttMsg["targetDuration"] = f.getTargetDurationStr()
+					mqttMsg["runtime"] = f.getRuntimeStr()
+					
 					mqttMsg = json.dumps(mqttMsg)
 
 					mqttTopic = string.replace(MQTT_TOPIC_SEND_TO_FREEZER, "*", str(f.id))

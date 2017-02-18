@@ -31,6 +31,9 @@ class Steps(BaseModel):
 
 
 
+def formatDurationStr( s):
+		return '{:02d}D, {:02d}:{:02d}:{:02d}'.format(int(s // 86400), int(s // 3600), int(s % 3600 // 60), int(s % 60))
+
 
 class Freezer():
 	"""docstring for Freezer"""
@@ -46,6 +49,7 @@ class Freezer():
 	overallRuntime = 0   # maximal time to run from start to end
 	runtime = 0			 # time how long the system is started
 	isStarted = False
+	targetDuration = 0
 
 	def __init__(self, _id):
 		self.id = _id
@@ -104,17 +108,24 @@ class Freezer():
 		self.save() #write stop cmd to db
 		print "STOPPED FREEZER - FERMANTATION ENDS"
 
-	def getDurationStr(self):
+	def getRuntimeStr(self):
 		if self.isStarted:
-			# print("DURATION: ",value.strftime('%Y-%m-%d %H:%M:%S'))
-			# print("DURATION: ",value.strftime('%d %H:%M:%S'))
-			duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(self.starttime)
-			return duration
+			return str(formatDurationStr(time.time()-self.starttime))
 		else:
 			return "-stopped-"
 
-	def getSollTemp(self):
-		_temptarget = 0
+	def getTargetDurationStr(self):
+		if self.isStarted:
+
+			return str(formatDurationStr(self.targetDuration))
+		else:
+			return "-"
+
+
+
+	def getTargetTemp(self):
+		'gets the target temp and targetTempDuration - chek if freezer is running first!'
+
 		_stepSum = 0
 		_lastStepSum = 0
 		for step in self.steps:
@@ -129,17 +140,15 @@ class Freezer():
 			_stepSum += step["step_duration"]
 			if self.runtime > _lastStepSum and self.runtime <= _stepSum:
 				# print("last= %f < runtime=%f < _stepSum=%f") % (_lastStepSum, self.runtime, _stepSum)
-				_temptarget = step["step_temperature"]
-				# print "break"
+				self.temp_target = step["step_temperature"]
+				self.targetDuration = _stepSum - self.runtime
+				print "-> TARGET TEMP =", self.temp_target
 				break
 			#else:
 				# print("last= %f < runtime=%f < _stepSum=%f") % (_lastStepSum, self.runtime, _stepSum)
 
 			_lastStepSum = _stepSum
 
-		if (self.isStarted):
-			self.temp_target = _temptarget
-			print "-> TARGET TEMP =", self.temp_target
 
 
 
