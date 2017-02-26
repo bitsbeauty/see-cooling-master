@@ -31,8 +31,10 @@ class Steps(BaseModel):
 
 
 
-def formatDurationStr( s):
-		return '{:02d}D, {:02d}:{:02d}:{:02d}'.format(int(s // 86400), int(s // 3600), int(s % 3600 // 60), int(s % 60))
+def formatDurationStr( _s):
+		#return str(datetime.timedelta(seconds=_s))
+		hours = _s % 86400 // 3600
+		return '{:02d}day, {:02d}:{:02d}:{:02d}'.format(int(_s // 86400), int(hours), int(_s % 3600 // 60), int(_s % 60))
 
 
 class Freezer():
@@ -50,6 +52,7 @@ class Freezer():
 	runtime = 0			 # time how long the system is started
 	isStarted = False
 	targetDuration = 0
+	runtimeEnded = False
 
 	def __init__(self, _id):
 		self.id = _id
@@ -63,13 +66,15 @@ class Freezer():
 		q = Header.update(starttime = self.starttime,
 			temp_air = self.temp_air,
 			temp_beer = self.temp_beer,
-			temp_target = self.temp_target).where(Header.id == self.id)
+			temp_target = self.temp_target).where(Header.id == (self.id))
 		q.execute()  # Execute the query, updating the database.
 
 	def updateValues(self):
 		'import values from he database'
 
-		h = Header.get(Header.id == self.id)
+		print "UPDATE VALUES - freezer:"+str(self.id)
+
+		h = Header.get(Header.id == (self.id))
 		self.starttime = h.starttime
 		self.temp_air = h.temp_air
 		self.temp_beer = h.temp_beer
@@ -82,24 +87,36 @@ class Freezer():
 		self.overallRuntime = 0
 		for s in self.steps:
 			self.overallRuntime += s["step_duration"]
+			print "update: step" + str(s["step_duration"]) + " - " + str(self.overallRuntime)
+		print "OVERALL: " + str(self.overallRuntime)
 
 		if self.starttime != None:
 			self.runtime = time.time() - self.starttime #update runtime
 
 	def isRunning(self):
+		print "IS RUNNING - freezer:"+str(self.id)
 		if self.starttime != None and self.starttime != 0:
 			if (self.runtime <= self.overallRuntime):
 				# fermenttaion is running
 				self.isStarted = True
+				self.runtimeEnded = False
+				print "- is running"
 				return True
 			else:
 				# Fermaentation ended!!!
-				self.isStarted = False
+				print "- time ended"
+				print "- runtime:"+str(self.runtime)
+				print "- overallRuntime:"+str(self.overallRuntime)
+
+				self.isStarted = True
+				self.runtimeEnded = True
 				self.stop()
 				return False
 		else:
 			# Fermentation stopped
+			print "- was stopped"
 			self.isStarted = False
+			self.runtimeEnded = False
 			return False
 
 	def stop(self):
@@ -112,7 +129,7 @@ class Freezer():
 		if self.isStarted:
 			return str(formatDurationStr(time.time()-self.starttime))
 		else:
-			return "-stopped-"
+			return "- ENDED -" #TODO: nicht sauber, besser "runtimeEnded"
 
 	def getTargetDurationStr(self):
 		if self.isStarted:

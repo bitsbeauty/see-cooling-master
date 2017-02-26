@@ -84,10 +84,9 @@ if __name__ == '__main__':
 	############ LOAD AVLUES ##################
 	# f = Header.select()
 	
+	# initialize freezer raay
 	for i in range(len(db.Header.select())):
-			# get headers
-			id = i+1
-			
+			# get headers			
 			freezer.append(db.Freezer(i+1))
 			freezer[i].updateValues()  # import data
 
@@ -115,17 +114,16 @@ if __name__ == '__main__':
 		
 
 		while True:
+			print " "
 			print("-START LOOP------------")
 			mqttc.loop()
 
-			
-			
 			for f in freezer:
 				# 1) get the freezer temp and get last databse values
 				f.updateValues()
 
 				if f.isRunning() is True:
-					print "----------FREEZER ["+ str(f.id) +"] started:"+str(f.isRunning())
+					print "----------FREEZER ["+ str(f.id) +"] started:"+str(f.isStarted) +" - runtimeEnded:"+str(f.runtimeEnded)
 					# print "startime", frez.starttime
 					print "Main Duration  :", f.overallRuntime
 					print ("Runtime        : " + str(f.runtime) +" (" + f.getRuntimeStr() + ")" )
@@ -137,13 +135,15 @@ if __name__ == '__main__':
 
 					# 3) compare temp values and set freezer on/off
 
+
 					# 4) pack value sin json and send to freezer
-					mqttMsg = {}
+					mqttMsg = {"relay": "0"}
 					mqttMsg["targetTemp"] = str(f.temp_target)
-					mqttMsg["targetDuration"] = f.getTargetDurationStr()
-					mqttMsg["runtime"] = f.getRuntimeStr()
+					mqttMsg["targetDurationStr"] = f.getTargetDurationStr()
+					mqttMsg["runtimeStr"] = f.getRuntimeStr()
 					
-					mqttMsg = json.dumps(mqttMsg)
+					mqttMsg = json.dumps(mqttMsg, separators=(',',':'))
+					print "JSON: "+ mqttMsg
 
 					mqttTopic = string.replace(MQTT_TOPIC_SEND_TO_FREEZER, "*", str(f.id))
 					mqttc.publish(mqttTopic, mqttMsg, 2)
@@ -151,7 +151,22 @@ if __name__ == '__main__':
 					## TODO: when freezer mqtt com is down -> give signal!!
 					
 				else:
-					print "----------FREEZER ["+ str(f.id) +"] started:"+str(f.isRunning())
+					print "----------FREEZER ["+ str(f.id) +"] started:"+str(f.isStarted) +" - runtimeEnded:"+str(f.runtimeEnded)
+
+					# 1) look if system is still running (then hold certain temp)
+					#TODO
+
+					# 2) send mqtt message
+					mqttMsg = {"relay": "0"}
+					mqttMsg["targetTemp"] = str(f.temp_target)
+					mqttMsg["targetDurationStr"] = f.getTargetDurationStr()
+					mqttMsg["runtimeStr"] = f.getRuntimeStr() # is = ENDED when programm has no more targetTemps to go
+					
+					mqttMsg = json.dumps(mqttMsg, separators=(',',':'))
+
+					mqttTopic = string.replace(MQTT_TOPIC_SEND_TO_FREEZER, "*", str(f.id))
+					mqttc.publish(mqttTopic, mqttMsg, 2)
+					
 
 
 			
