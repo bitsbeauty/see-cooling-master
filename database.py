@@ -34,7 +34,7 @@ class Steps(BaseModel):
 def formatDurationStr( _s):
 		#return str(datetime.timedelta(seconds=_s))
 		hours = _s % 86400 // 3600
-		return '{:02d}day, {:02d}:{:02d}:{:02d}'.format(int(_s // 86400), int(hours), int(_s % 3600 // 60), int(_s % 60))
+		return '{:02d}day {:02d}:{:02d}:{:02d}'.format(int(_s // 86400), int(hours), int(_s % 3600 // 60), int(_s % 60))
 
 
 class Freezer():
@@ -126,17 +126,33 @@ class Freezer():
 		print "STOPPED FREEZER - FERMANTATION ENDS"
 
 	def getRuntimeStr(self):
-		if self.isStarted:
+		if self.isStarted == True and self.runtimeEnded == False:
 			return str(formatDurationStr(time.time()-self.starttime))
-		else:
-			return "- ENDED -" #TODO: nicht sauber, besser "runtimeEnded"
+
+		elif self.isStarted == True and self.runtimeEnded == True:
+			return "System ENDED!  "
+		
+		elif self.isStarted == False:
+			return "System STOPPED!"
+
+	def getLeftRuntimeStr(self):
+		if self.isStarted == True and self.runtimeEnded == False:
+			return str(formatDurationStr(self.overallRuntime-(time.time()-self.starttime)))
+
+		elif self.isStarted == True and self.runtimeEnded == True:
+			return "System ENDED!  "
+		
+		elif self.isStarted == False:
+			return "System STOPPED!"
+
 
 	def getTargetDurationStr(self):
-		if self.isStarted:
-
-			return str(formatDurationStr(self.targetDuration))
-		else:
-			return "-"
+		if self.isStarted == True and self.runtimeEnded == False:
+			return "-"+str(formatDurationStr(self.targetDuration))
+		elif self.isStarted == True and self.runtimeEnded == True:
+			return "System ENDED!  "
+		elif self.isStarted == False:
+			return "System STOPPED!"
 
 
 

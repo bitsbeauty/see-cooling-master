@@ -11,7 +11,7 @@ import string
 MQTT_BROKER = "seebier.local"
 MQTT_PORT = 1883
 MQTT_KEEPALIVE_INTERVAL = 45
-MQTT_TOPIC_TEMP_RECEIVE = "/freezer/+/isValues"
+MQTT_TOPIC_TEMP_RECEIVE = "/freezer/+/temperatures"
 MQTT_TOPIC_SEND_TO_FREEZER = "/freezer/f*/setValues"
 
 
@@ -47,10 +47,10 @@ def on_message_kuehlung(client, userdata, message):
 	data = json.loads(message.payload)
 
 	for key,value in data.iteritems():
-		if key == 'tempbeer':
+		if key == 'beerTemp':
 			dstr += "- beer:"+str(value)
 			freezer[frezNr].temp_beer = value
-		if key == 'tempair':
+		if key == 'airTemp':
 			dstr += " - air:"+str(value)
 			freezer[frezNr].temp_air = value
 
@@ -141,6 +141,7 @@ if __name__ == '__main__':
 					mqttMsg["targetTemp"] = str(f.temp_target)
 					mqttMsg["targetDurationStr"] = f.getTargetDurationStr()
 					mqttMsg["runtimeStr"] = f.getRuntimeStr()
+					mqttMsg["leftRuntimeStr"] = f.getLeftRuntimeStr()
 					
 					mqttMsg = json.dumps(mqttMsg, separators=(',',':'))
 					print "JSON: "+ mqttMsg
@@ -178,7 +179,7 @@ if __name__ == '__main__':
 
 
 
-			time.sleep(0.3)
+			time.sleep(0.9)
 
 	except:  
 		# this catches ALL other exceptions including errors.  
