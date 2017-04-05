@@ -87,8 +87,8 @@ class Freezer():
 		self.overallRuntime = 0
 		for s in self.steps:
 			self.overallRuntime += s["step_duration"]
-			print "update: step" + str(s["step_duration"]) + " - " + str(self.overallRuntime)
-		print "OVERALL: " + str(self.overallRuntime)
+			#print "update: step" + str(s["step_duration"]) + " - " + str(self.overallRuntime)
+		#print "OVERALL: " + str(self.overallRuntime)
 
 		if self.starttime != None:
 			self.runtime = time.time() - self.starttime #update runtime
