@@ -31,16 +31,17 @@ def on_connect(client, userdata, flags, rc):
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
 	print("RECEIVED:")
-	print(str(client)+" - "+str(userdata))
+	# print(str(client)+" - "+str(userdata))
 	print(msg.topic+" -- "+str(msg.payload))
+	print " "
 
-	topicSub = msg.topic.split("/",1)[1] 
+	topicSub = msg.topic.split("/",1)[1]
 	
-	if msg.topic == MQTT_TOPIC_TEMP_RECEIVE:
+	if msg.topic.split("/")[3]  == MQTT_TOPIC_TEMP_RECEIVE.split("/")[3] :
 		## RECEIVE TEMPS
 		on_message_kuehlung(client, userdata, msg)
 
-	if msg.topic == MQTT_TOPIC_ACKN:
+	if msg.topic.split("/")[3]  == MQTT_TOPIC_ACKN.split("/")[3] :
 		## ACKNOLEDGE ----
 		frezNr = int(message.topic.partition('/freezer/f')[-1].rpartition('/')[0])
 		print("ACKN:"+str(frezNr))
@@ -58,7 +59,7 @@ def on_message_kuehlung(client, userdata, message):
 	#print("%s %s" % (message.topic, message.payload))
 
 	# get nr of the freezer which send the mesage
-	dstr =  "###mqtt message### "
+	dstr =  "###mqtt message### "  # Debug String
 	frezNr = int(message.topic.partition('/freezer/f')[-1].rpartition('/')[0])
 	dstr += ("frezzerNR: %s")%(frezNr)
 
@@ -73,7 +74,7 @@ def on_message_kuehlung(client, userdata, message):
 			freezer[frezNr].temp_air = value
 
 	dstr += " ###"
-	print dstr
+	#print dstr
 	freezer[frezNr].save()
 
 
@@ -159,7 +160,7 @@ if __name__ == '__main__':
 					mqttMsg["targetTemp"] = str(f.temp_target)
 					#mqttMsg["targetDurationStr"] = f.getTargetDurationStr()
 					mqttMsg["runtimeStr"] = f.getRuntimeStr()
-					mqttMsg["leftRuntimeStr"] = f.getLeftRuntimeStr()
+					# mqttMsg["leftRuntimeStr"] = f.getLeftRuntimeStr()
 					
 					mqttMsg = json.dumps(mqttMsg, separators=(',',':'))
 					print "JSON1: "+ mqttMsg
@@ -168,11 +169,11 @@ if __name__ == '__main__':
 					mqttTopic = string.replace(MQTT_TOPIC_SEND_TO_FREEZER, "*", str(f.id))
 					mqttc.publish(mqttTopic, mqttMsg, 2)
 
-					mqttMsg = {}
-					mqttMsg["targetDurationStr"] = f.getTargetDurationStr()
-					mqttMsg = json.dumps(mqttMsg, separators=(',',':'))
-					print "JSON2: "+ mqttMsg
-					mqttc.publish(mqttTopic, mqttMsg, 2)
+					# mqttMsg = {}
+					# mqttMsg["targetDurationStr"] = f.getTargetDurationStr()
+					# mqttMsg = json.dumps(mqttMsg, separators=(',',':'))
+					# print "JSON2: "+ mqttMsg
+					# mqttc.publish(mqttTopic, mqttMsg, 2)
 
 					## TODO: when freezer mqtt com is down -> give signal!!
 					
