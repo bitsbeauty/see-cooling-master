@@ -68,14 +68,14 @@ def on_message_kuehlung(client, userdata, message):
 	for key,value in data.iteritems():
 		if key == 'beerTemp':
 			dstr += "- beer:"+str(value)
-			freezer[frezNr].temp_beer = value
+			freezer[frezNr-1].temp_beer = value
 		if key == 'airTemp':
 			dstr += " - air:"+str(value)
-			freezer[frezNr].temp_air = value
+			freezer[frezNr-1].temp_air = value
 
 	dstr += " ###"
 	#print dstr
-	freezer[frezNr].save()
+	freezer[frezNr-1].save()
 
 
 freezer = [] # abstraction list of freezer
