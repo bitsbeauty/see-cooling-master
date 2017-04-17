@@ -154,11 +154,14 @@ if __name__ == '__main__':
 					# 2) get sollwert from database
 					f.getTargetTemp()
 
+					mqttMsg = {}
 					# 3) compare temp values and set freezer on/off
-
+					if f.temp_beer <= (f.temp_target):
+						mqttMsg = {"relay": "0"}
+					else:
+						mqttMsg = {"relay": "1"}
 
 					# 4) pack value sin json and send to freezer
-					mqttMsg = {"relay": "0"}
 					mqttMsg["targetTemp"] = str(f.temp_target)
 					#mqttMsg["targetDurationStr"] = f.getTargetDurationStr()
 					mqttMsg["runtimeStr"] = f.getRuntimeStr()
