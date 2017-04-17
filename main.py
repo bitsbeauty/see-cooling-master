@@ -75,7 +75,7 @@ def on_message_kuehlung(client, userdata, message):
 
 	dstr += " ###"
 	#print dstr
-	freezer[frezNr-1].save()
+	freezer[frezNr-1].write2db_temps()
 
 
 freezer = [] # abstraction list of freezer

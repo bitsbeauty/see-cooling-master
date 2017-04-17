@@ -69,6 +69,12 @@ class Freezer():
 			temp_target = self.temp_target).where(Header.id == (self.id))
 		q.execute()  # Execute the query, updating the database.
 
+	def write2db_temps(self):
+		q = Header.update(
+			temp_air = self.temp_air,
+			temp_beer = self.temp_beer).where(Header.id == (self.id))
+		q.execute()  # Execute the query, updating the database.
+
 	def updateValues(self):
 		'import values from he database'
 
