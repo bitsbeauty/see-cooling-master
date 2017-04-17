@@ -13,24 +13,26 @@ MQTT_PORT = 1883
 MQTT_KEEPALIVE_INTERVAL = 45
 MQTT_TOPIC_TEMP_RECEIVE = "/freezer/+/temperatures"
 MQTT_TOPIC_SEND_TO_FREEZER = "/freezer/f*/setValues"
-MQTT_TOPIC_ACKN = "/freezer/f*/receivedMessage"
+MQTT_TOPIC_ACKN = "/freezer/+/receivedMessage"
+
+timeACKreceived =[0,0]
 
 
 # The callback for when the client receives a CONNACK response from the server.
 def on_connect(client, userdata, flags, rc):
 	print("Connected to MQTT Broker")
 	print("Connected with result code "+str(rc))
-
 	# Subscribing in on_connect() means that if we lose the connection and
 	# reconnect then subscriptions will be renewed.
 	# client.subscribe("$SYS/#")
 	mqttc.subscribe(MQTT_TOPIC_TEMP_RECEIVE,2)
 	mqttc.subscribe(MQTT_TOPIC_ACKN,2)
+	
 
 
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
-	print("RECEIVED:")
+	print("--------------------------------------------RECEIVED:")
 	# print(str(client)+" - "+str(userdata))
 	print(msg.topic+" -- "+str(msg.payload))
 	print " "
@@ -43,7 +45,7 @@ def on_message(client, userdata, msg):
 
 	if msg.topic.split("/")[3]  == MQTT_TOPIC_ACKN.split("/")[3] :
 		## ACKNOLEDGE ----
-		frezNr = int(message.topic.partition('/freezer/f')[-1].rpartition('/')[0])
+		frezNr = int(msg.topic.partition('/freezer/f')[-1].rpartition('/')[0])
 		print("ACKN:"+str(frezNr))
 		if frezNr == 1:
 			timeACKreceived[0] = time.time()
