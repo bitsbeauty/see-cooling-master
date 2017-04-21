@@ -80,7 +80,7 @@ class Freezer():
 	def updateValues(self):
 		'import values from he database'
 
-		print "UPDATE VALUES - freezer:"+str(self.id)
+		# print "UPDATE VALUES - freezer:"+str(self.id)
 
 		h = Header.get(Header.id == (self.id))
 		self.starttime = h.starttime
@@ -102,19 +102,19 @@ class Freezer():
 			self.runtime = time.time() - self.starttime #update runtime
 
 	def isRunning(self):
-		print "IS RUNNING - freezer:"+str(self.id)
+		# print "IS RUNNING - freezer:"+str(self.id)
 		if self.starttime != None and self.starttime != 0:
 			if (self.runtime <= self.overallRuntime):
 				# fermenttaion is running
 				self.isStarted = True
 				self.runtimeEnded = False
-				print "- is running"
+				# print "- is running"
 				return True
 			else:
 				# Fermaentation ended!!!
-				print "- time ended"
-				print "- runtime:"+str(self.runtime)
-				print "- overallRuntime:"+str(self.overallRuntime)
+				# print "- time ended"
+				# print "- runtime:"+str(self.runtime)
+				# print "- overallRuntime:"+str(self.overallRuntime)
 
 				self.isStarted = True
 				self.runtimeEnded = True
@@ -122,7 +122,7 @@ class Freezer():
 				return False
 		else:
 			# Fermentation stopped
-			print "- was stopped"
+			# print "- was stopped"
 			self.isStarted = False
 			self.runtimeEnded = False
 			return False
@@ -131,7 +131,7 @@ class Freezer():
 		self.runtime = None
 		self.temp_target = None
 		self.save() #write stop cmd to db
-		print "STOPPED FREEZER - FERMANTATION ENDS"
+		# print "STOPPED FREEZER - FERMANTATION ENDS"
 
 	def getRuntimeStr(self):
 		if self.isStarted == True and self.runtimeEnded == False:
@@ -183,7 +183,7 @@ class Freezer():
 				# print("last= %f < runtime=%f < _stepSum=%f") % (_lastStepSum, self.runtime, _stepSum)
 				self.temp_target = step["step_temperature"]
 				self.targetDuration = _stepSum - self.runtime
-				print "-> TARGET TEMP =", self.temp_target
+				# print "-> TARGET TEMP =", self.temp_target
 				break
 			#else:
 				# print("last= %f < runtime=%f < _stepSum=%f") % (_lastStepSum, self.runtime, _stepSum)
