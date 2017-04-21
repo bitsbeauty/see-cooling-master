@@ -156,10 +156,7 @@ if __name__ == '__main__':
 
 					mqttMsg = {}
 					# 3) compare temp values and set freezer on/off
-					if f.temp_beer <= (f.temp_target):
-						mqttMsg = {"relay": "0"}
-					else:
-						mqttMsg = {"relay": "1"}
+					mqttMsg = {"relay": f.setRelay()}
 
 					# 4) pack value sin json and send to freezer
 					mqttMsg["targetTemp"] = str(f.temp_target)

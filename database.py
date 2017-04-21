@@ -54,6 +54,8 @@ class Freezer():
 	targetDuration = 0
 	runtimeEnded = False
 
+	relayStatus = 0;
+
 	def __init__(self, _id):
 		self.id = _id
 
@@ -187,6 +189,20 @@ class Freezer():
 				# print("last= %f < runtime=%f < _stepSum=%f") % (_lastStepSum, self.runtime, _stepSum)
 
 			_lastStepSum = _stepSum
+
+	def setRelay(self):
+		r = 0
+		if self.temp_beer <= (self.temp_target):
+			# turn of cooling, temp is reached
+			r = 0
+		else:
+			# turn on relay to cool down
+			r = 1
+
+		if r != self.relayStatus:
+			self.relayStatus = r
+
+		return self.relayStatus
 
 
 
