@@ -6,6 +6,7 @@ import paho.mqtt.client as mqtt
 import json
 import database as db
 import string
+import requests
 
 # Define Variables
 MQTT_BROKER = "seebier.local"
@@ -18,6 +19,9 @@ MQTT_TOPIC_ACKN = "/freezer/+/receivedMessage"
 ACKreceived =[True,True]
 timeMsgSend =[0.0,0.0]
 msgPart = [0,0]  # part of message to send
+
+# Data Log in www
+lastDataLogSendTime = 0
 
 
 # The callback for when the client receives a CONNACK response from the server.
@@ -207,8 +211,9 @@ if __name__ == '__main__':
 						mqttMsg = {"relay": "0"}
 						mqttMsg["targetTemp"] = str(f.temp_target)
 						mqttMsg["targetDurationStr"] = f.getTargetDurationStr()
-						mqttMsg["runtimeStr"] = f.getRuntimeStr() # is = ENDED when programm has no more targetTemps to go
-						
+						# mqttMsg["runtimeStr"] = f.getRuntimeStr() # is = ENDED when programm has no more targetTemps to go
+						mqttMsg["leftRuntimeStr"] = f.getLeftRuntimeStr()
+
 						mqttMsg = json.dumps(mqttMsg, separators=(',',':'))
 
 						mqttTopic = string.replace(MQTT_TOPIC_SEND_TO_FREEZER, "*", str(f.id))
@@ -216,13 +221,23 @@ if __name__ == '__main__':
 						ACKreceived[f.id-1] = False
 						timeMsgSend[f.id-1] = time.time()
 
+				if f.id == 1:
+					if time.time()-lastDataLogSendTime > 1:
+						# print "send data LOG:"
+						rpayload = {'FreezerNr': f.id, 'TempBeer': f.temp_beer, 'TempAir': f.temp_air, 'TempTarget': f.temp_target, 'RelayStatus': f.relayStatus}
+						r = requests.post("http://seebier.intern.neuamsee.de/data01.php", data=rpayload)
+						
+						# print(r.url)
+						# print(rpayload)
+						# print(r.status_code, r.reason)
+						# print(r.text)
+						lastDataLogSendTime = time.time()
+
 
 			# check if temp is t
-
-
-
-
 			# time.sleep(0.9)
+
+			
 
 	except:  
 		# this catches ALL other exceptions including errors.  

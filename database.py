@@ -132,8 +132,11 @@ class Freezer():
 		self.temp_target = None
 		self.save() #write stop cmd to db
 		# print "STOPPED FREEZER - FERMANTATION ENDS"
+		self.relayStatus = 0 #relay off
 
 	def getRuntimeStr(self):
+		'time how long program is running since started'
+
 		if self.isStarted == True and self.runtimeEnded == False:
 			return str(formatDurationStr(time.time()-self.starttime))
 
@@ -144,6 +147,8 @@ class Freezer():
 			return "System STOPPED!"
 
 	def getLeftRuntimeStr(self):
+		'left time how long the whole programm will run (overallRuntime - runtime)'
+
 		if self.isStarted == True and self.runtimeEnded == False:
 			return str(formatDurationStr(self.overallRuntime-(time.time()-self.starttime)))
 
@@ -155,6 +160,8 @@ class Freezer():
 
 
 	def getTargetDurationStr(self):
+		'time left how long will keep actual target duration'
+		
 		if self.isStarted == True and self.runtimeEnded == False:
 			return "-"+str(formatDurationStr(self.targetDuration))
 		elif self.isStarted == True and self.runtimeEnded == True:
