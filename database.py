@@ -45,6 +45,7 @@ class Freezer():
 	temp_air = 0.0
 	temp_beer = 0.0
 	temp_target = None
+	lastTempTarget = 0.0
 
 	steps = {} # # type dictonary,
 
@@ -53,6 +54,7 @@ class Freezer():
 	isStarted = False
 	targetDuration = 0
 	runtimeEnded = False
+	fermentationProgramMode = 0 # 0=stopped; 1=running; 2=ended
 
 	relayStatus = 0;
 
@@ -95,11 +97,16 @@ class Freezer():
 		self.overallRuntime = 0
 		for s in self.steps:
 			self.overallRuntime += s["step_duration"]
+			self.lastTempTarget = s["step_temperature"]
+
 			#print "update: step" + str(s["step_duration"]) + " - " + str(self.overallRuntime)
 		#print "OVERALL: " + str(self.overallRuntime)
 
 		if self.starttime != None:
 			self.runtime = time.time() - self.starttime #update runtime
+
+		self.isRunning()
+		self.getTargetTemp() # update target value
 
 	def isRunning(self):
 		# print "IS RUNNING - freezer:"+str(self.id)
@@ -108,6 +115,7 @@ class Freezer():
 				# fermenttaion is running
 				self.isStarted = True
 				self.runtimeEnded = False
+				self.fermentationProgramMode = 1
 				# print "- is running"
 				return True
 			else:
@@ -118,6 +126,7 @@ class Freezer():
 
 				self.isStarted = True
 				self.runtimeEnded = True
+				self.fermentationProgramMode = 2
 				self.stop()
 				return False
 		else:
@@ -125,7 +134,60 @@ class Freezer():
 			# print "- was stopped"
 			self.isStarted = False
 			self.runtimeEnded = False
+			self.fermentationProgramMode = 0
 			return False
+
+	def getTargetTemp(self):
+		'gets the target temp and targetTempDuration - chek if freezer is running first!'
+
+		if self.fermentationProgramMode == 0:
+			# system stopped from inteface
+			self.temp_target = None
+
+		elif self.fermentationProgramMode == 1:
+			# system is Running
+			_stepSum = 0
+			_lastStepSum = 0
+			for step in self.steps:
+				# # DEBUG			
+				# steppstr = ""
+				# for smeta in step:
+				# 	# stepp = stepp + str(sname)
+				# 	steppstr += str(smeta)+': '+str(step[smeta]) + ' - '
+				# print steppstr
+
+				# check if runtime is in this step
+				_stepSum += step["step_duration"]
+				if self.runtime > _lastStepSum and self.runtime <= _stepSum:
+					# print("last= %f < runtime=%f < _stepSum=%f") % (_lastStepSum, self.runtime, _stepSum)
+					self.temp_target = step["step_temperature"]
+					self.targetDuration = _stepSum - self.runtime
+					# print "-> TARGET TEMP =", self.temp_target
+					break
+				#else:
+					# print("last= %f < runtime=%f < _stepSum=%f") % (_lastStepSum, self.runtime, _stepSum)
+
+				_lastStepSum = _stepSum
+
+		elif self.fermentationProgramMode == 2:
+			# fermentaton program ended - keep last target Temp
+			self.temp_target = self.lastTempTarget #lastTempTarget is updtated in update()
+
+
+
+	def setRelay(self):
+		r = 0
+		if self.temp_beer <= (self.temp_target):
+			# turn of cooling, temp is reached
+			r = 0
+		else:
+			# turn on relay to cool down
+			r = 1
+
+		if r != self.relayStatus:
+			self.relayStatus = r
+
+		return self.relayStatus
 
 	def stop(self):
 		self.runtime = None
@@ -153,7 +215,7 @@ class Freezer():
 			return str(formatDurationStr(self.overallRuntime-(time.time()-self.starttime)))
 
 		elif self.isStarted == True and self.runtimeEnded == True:
-			return "System ENDED!  "
+			return "FERMENTAT. END!"
 		
 		elif self.isStarted == False:
 			return "System STOPPED!"
@@ -161,55 +223,13 @@ class Freezer():
 
 	def getTargetDurationStr(self):
 		'time left how long will keep actual target duration'
-		
+
 		if self.isStarted == True and self.runtimeEnded == False:
 			return "-"+str(formatDurationStr(self.targetDuration))
 		elif self.isStarted == True and self.runtimeEnded == True:
 			return "System ENDED!  "
 		elif self.isStarted == False:
 			return "System STOPPED!"
-
-
-
-	def getTargetTemp(self):
-		'gets the target temp and targetTempDuration - chek if freezer is running first!'
-
-		_stepSum = 0
-		_lastStepSum = 0
-		for step in self.steps:
-			# DEBUG			
-			# steppstr = ""
-			# for smeta in step:
-			# 	# stepp = stepp + str(sname)
-			# 	steppstr += str(smeta)+': '+str(step[smeta]) + ' - '
-			# print steppstr
-
-			# check if runtime is in this step
-			_stepSum += step["step_duration"]
-			if self.runtime > _lastStepSum and self.runtime <= _stepSum:
-				# print("last= %f < runtime=%f < _stepSum=%f") % (_lastStepSum, self.runtime, _stepSum)
-				self.temp_target = step["step_temperature"]
-				self.targetDuration = _stepSum - self.runtime
-				# print "-> TARGET TEMP =", self.temp_target
-				break
-			#else:
-				# print("last= %f < runtime=%f < _stepSum=%f") % (_lastStepSum, self.runtime, _stepSum)
-
-			_lastStepSum = _stepSum
-
-	def setRelay(self):
-		r = 0
-		if self.temp_beer <= (self.temp_target):
-			# turn of cooling, temp is reached
-			r = 0
-		else:
-			# turn on relay to cool down
-			r = 1
-
-		if r != self.relayStatus:
-			self.relayStatus = r
-
-		return self.relayStatus
 
 
 
