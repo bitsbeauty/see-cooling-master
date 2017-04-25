@@ -109,9 +109,9 @@ class Freezer():
 		self.getTargetTemp() # update target value
 
 	def isRunning(self):
-		print "isRuning()? - freezer:"+str(self.id)
-		print "- runtime:"+str(self.runtime)
-		print "- overallRuntime:"+str(self.overallRuntime)
+		# print "isRuning()? - freezer:"+str(self.id)
+		# print "- runtime:"+str(self.runtime)
+		# print "- overallRuntime:"+str(self.overallRuntime)
 
 		if self.starttime != None and self.starttime != 0:
 			if (self.runtime <= self.overallRuntime):
@@ -119,11 +119,11 @@ class Freezer():
 				self.isStarted = True
 				self.runtimeEnded = False
 				self.fermentationProgramMode = 1
-				print "- is running"
+				# print "- is running"
 				return True
 			else:
 				# Fermaentation ended!!!
-				print "- time ended"
+				# print "- time ended"
 				# print "- runtime:"+str(self.runtime)
 				# print "- overallRuntime:"+str(self.overallRuntime)
 
@@ -133,7 +133,7 @@ class Freezer():
 				return False
 		else:
 			# Fermentation stopped
-			print "- was stopped"
+			# print "- was stopped"
 			self.isStarted = False
 			self.runtimeEnded = False
 			self.fermentationProgramMode = 0
@@ -178,18 +178,21 @@ class Freezer():
 
 
 	def setRelay(self):
-		r = 0
-		if self.temp_beer <= (self.temp_target):
-			# turn of cooling, temp is reached
-			r = 0
+		if (self.fermentationProgramMode == 0):
+			return 0
 		else:
-			# turn on relay to cool down
-			r = 1
+			r = 0
+			if self.temp_beer <= (self.temp_target):
+				# turn of cooling, temp is reached
+				r = 0
+			else:
+				# turn on relay to cool down
+				r = 1
 
-		if r != self.relayStatus:
-			self.relayStatus = r
+			if r != self.relayStatus:
+				self.relayStatus = r
 
-		return self.relayStatus
+			return self.relayStatus
 
 
 	def getRuntimeStr(self):
@@ -199,7 +202,7 @@ class Freezer():
 			return str(formatDurationStr(time.time()-self.starttime))
 
 		elif self.isStarted == True and self.runtimeEnded == True:
-			return "System ENDED!  "
+			return "FERMENTAT. END!"
 		
 		elif self.isStarted == False:
 			return "System STOPPED!"

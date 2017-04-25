@@ -144,7 +144,7 @@ if __name__ == '__main__':
 
 		while True:
 			# print " "
-			print("-START LOOP------------")
+			# print("-START LOOP------------")
 			mqttc.loop()
 
 			for f in freezer:
@@ -156,7 +156,7 @@ if __name__ == '__main__':
 					msgPart[f.id-1] = 0
 					ACKreceived[f.id-1] = True
 
-				if f.isRunning() is True:
+				if f.isStarted is True:
 					# print "----------FREEZER ["+ str(f.id) +"] started:"+str(f.isStarted) +" - runtimeEnded:"+str(f.runtimeEnded)
 					# print "startime", frez.starttime
 					# print "Main Duration  :", f.overallRuntime
@@ -212,7 +212,7 @@ if __name__ == '__main__':
 					if ACKreceived[f.id-1] == True:
 						mqttMsg = {"relay": f.setRelay()}
 						mqttMsg["fpMode"] = str(f.fermentationProgramMode)
-						mqttMsg["targetTemp"] = str(f.lastTempTarget)	# TODO kill lastTemptarget #str(f.temp_target)
+						mqttMsg["targetTemp"] = str(f.temp_target)	# TODO kill lastTemptarget #str(f.temp_target)
 						# mqttMsg["targetDurationStr"] = f.getTargetDurationStr()
 						# mqttMsg["runtimeStr"] = f.getRuntimeStr() # is = ENDED when programm has no more targetTemps to go
 						mqttMsg["leftRuntimeStr"] = f.getLeftRuntimeStr()
