@@ -144,7 +144,7 @@ if __name__ == '__main__':
 
 		while True:
 			# print " "
-			# print("-START LOOP------------")
+			print("-START LOOP------------")
 			mqttc.loop()
 
 			for f in freezer:
@@ -175,7 +175,7 @@ if __name__ == '__main__':
 							mqttMsg = {"relay": f.setRelay()}
 
 							# 4) pack values in json and send to freezer
-							mqttMsg["isRunning"] = "true"
+							mqttMsg["fpMode"] = str(f.fermentationProgramMode)
 							mqttMsg["targetTemp"] = str(f.temp_target)
 							# mqttMsg["targetDurationStr"] = f.getTargetDurationStr()
 							# mqttMsg["runtimeStr"] = f.getRuntimeStr()
@@ -206,12 +206,12 @@ if __name__ == '__main__':
 					# print "----------FREEZER ["+ str(f.id) +"] started:"+str(f.isStarted) +" - runtimeEnded:"+str(f.runtimeEnded)
 					##### Fermentation ended -- or stopped
 					# 1) look if system is still running (then hold certain temp)
-					#TODO
+					#TODO done in update() and getTargetTemp()
 
 					# 2) send mqtt message
 					if ACKreceived[f.id-1] == True:
 						mqttMsg = {"relay": f.setRelay()}
-						mqttMsg["isRunning"] = "false"
+						mqttMsg["fpMode"] = str(f.fermentationProgramMode)
 						mqttMsg["targetTemp"] = str(f.lastTempTarget)	# TODO kill lastTemptarget #str(f.temp_target)
 						# mqttMsg["targetDurationStr"] = f.getTargetDurationStr()
 						# mqttMsg["runtimeStr"] = f.getRuntimeStr() # is = ENDED when programm has no more targetTemps to go

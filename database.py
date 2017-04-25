@@ -109,29 +109,31 @@ class Freezer():
 		self.getTargetTemp() # update target value
 
 	def isRunning(self):
-		# print "IS RUNNING - freezer:"+str(self.id)
+		print "isRuning()? - freezer:"+str(self.id)
+		print "- runtime:"+str(self.runtime)
+		print "- overallRuntime:"+str(self.overallRuntime)
+
 		if self.starttime != None and self.starttime != 0:
 			if (self.runtime <= self.overallRuntime):
 				# fermenttaion is running
 				self.isStarted = True
 				self.runtimeEnded = False
 				self.fermentationProgramMode = 1
-				# print "- is running"
+				print "- is running"
 				return True
 			else:
 				# Fermaentation ended!!!
-				# print "- time ended"
+				print "- time ended"
 				# print "- runtime:"+str(self.runtime)
 				# print "- overallRuntime:"+str(self.overallRuntime)
 
 				self.isStarted = True
 				self.runtimeEnded = True
 				self.fermentationProgramMode = 2
-				self.stop()
 				return False
 		else:
 			# Fermentation stopped
-			# print "- was stopped"
+			print "- was stopped"
 			self.isStarted = False
 			self.runtimeEnded = False
 			self.fermentationProgramMode = 0
@@ -189,12 +191,6 @@ class Freezer():
 
 		return self.relayStatus
 
-	def stop(self):
-		self.runtime = None
-		self.temp_target = None
-		self.save() #write stop cmd to db
-		# print "STOPPED FREEZER - FERMANTATION ENDS"
-		self.relayStatus = 0 #relay off
 
 	def getRuntimeStr(self):
 		'time how long program is running since started'
