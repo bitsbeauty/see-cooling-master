@@ -2,7 +2,7 @@
 import time, datetime
 from peewee import *
 
-db = MySQLDatabase('seebier', user='root', passwd='seelandtraum')
+db = MySQLDatabase('seebier', user='root', passwd='addpassword')
 
 class UnknownField(object):
 	def __init__(self, *_, **__): pass
